@@ -2,102 +2,71 @@ import numpy as np
 import cv2
 from sklearn import datasets
 import matplotlib.pyplot as plt
+from image_util import *
+from contour_util import *
+
+def get_video_title(order_number):
+    if (order_number < 1 or order_number > 10):
+        return None
+    return "video/video" + str(order_number) + ".mp4"
+
+def cross_line(x,y):
+    if x > 180 and x < 480 and y < 250 and y > 200:
+        return True
+    return False
+
+if __name__ == '__main__':
+
+    # ucitavanje videa
+    frame_num = 0 # frejm, tj broj frejma koji se obradjuje
+    counter = 0 # brojac pesaka
+    cap = cv2.VideoCapture(get_video_title(2))
+    cap.set(1, frame_num)  # indeksiranje frejmova
+
+    #izlazni video
+    fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+    video = cv2.VideoWriter('output1.avi', fourcc, 25, (640,480))
+
+    first_img = None
+    fift_img = None
+    while True:
+        frame_num += 1
+        ret_val, frame = cap.read()
+        # if not frame_num%3 == 0:
+        #     continue
+        retVal = frame
+        if not ret_val:
+            break
+        prev = frame
+        if(frame_num == 1):
+            first_img = frame
+            # linija: y: 150, x1: 180, x2: 480
+            cv2.line(frame, (180, 225), (480, 225), (0, 255, 0), 2)
+            #display_image(frame)
+            #detected = detect_areaCanny(frame)
+            #print(detected)
+
+        with_contoures, contoures = detect_contoursBrownColor(frame)
+        centers = []
+        for cont in contoures:
+            center = find_contour_centeroid(cont)
+            centers.append(center)
+            if (cross_line(center[0], center[1])):
+                counter += 1
+                with_contoures = cv2.circle(with_contoures, (center[0], center[1]), radius=2, color=(0, 0, 255), thickness=2)
+        print(centers)
+        cv2.line(with_contoures, (180, 225), (480, 225), (0, 255, 0), 2)
+        video.write(with_contoures)
+
+        ret_val, frame = cap.read()
 
 
-sum_of_nums = 0
-k = 0
-n = 0
+        curr = frame
+    print(counter)
 
-# ucitavanje videa
-frame_num = 0
-cap = cv2.VideoCapture("video/video9.mp4")
-cap.set(1, frame_num)  # indeksiranje frejmova
+    cv2.destroyAllWindows()
+    video.release()
 
-
-# analiza videa frejm po frejm
-
-def image_gray(image):
-    return cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
-
-def image_bin(image_gs):
-    height, width = image_gs.shape[0:2]
-    image_binary = np.ndarray((height, width), dtype=np.uint8)
-    ret, image_bin = cv2.threshold(image_gs, 150, 255, cv2.THRESH_BINARY)
-    return image_bin
-
-def invert(image):
-    return 255-image
-
-def display_image(image, color=False):
-    if color:
-        plt.imshow(image)
-    else:
-        plt.imshow(image, 'gray')
-
-def dilate(image):
-    kernel = np.ones((3, 3)) # strukturni element 3x3 blok
-    return cv2.dilate(image, kernel, iterations=1)
-
-def erode(image):
-    kernel = np.ones((3, 3)) # strukturni element 3x3 blok
-    return cv2.erode(image, kernel, iterations=1)
-
-def histogram(img_gray):
-    hist_full = cv2.calcHist([img_gray], [0], None, [255], [0, 255])
-    plt.plot(hist_full)
-    plt.show()
-
-def detect_areaCanny(img):
-    T1 = 50 #ispod T1 nije ivica
-    T2 = 100 # iznad T2 jeste ivica
-    #izmedju T1 i T2 slaba ivica
-
-    THETA = np.pi / 180
-    #50, 100
-    #img = invert(img)
-    img_gs = image_gray(img)
-    #histogram(img_gs)
-    #display_image(img_gs)
-    edges_img = cv2.Canny(img_gs, T1, T2, apertureSize=3)
-    #plt.imshow(edges_img, "gray")
-
-    # minimalna duzina linije
-    min_line_length = 250
-
-    # Hough transformacija
-    lines = cv2.HoughLinesP(image=edges_img, rho=1, theta=THETA, threshold=100, lines=np.array([]),
-                            minLineLength=min_line_length, maxLineGap=20)
-
-    for line in lines:
-        x1, y1, x2, y2 = line[0]
-        if y1 < 50 or y2 < 50 or x1 < 155 or x2 > 550:
-            continue
-        print ((x1, y1), (x2, y2))
-        cv2.line(img, (x1, y1), (x2, y2), (0, 255, 0), 2)
-
-    cv2.imshow('image', img)
-    display_image(img)
-
-
-def detect_contours(img):
-    img_gray = image_gray(img)
-    image_ada_bin = cv2.adaptiveThreshold(img_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 15, 5)
-    display_image(image_ada_bin)
-    return
-
-while frame_num < 5:
-
-    frame_num += 1
-    ret_val, frame = cap.read()
-
-    # ako frejm nije zahvacen
-    if not ret_val:
-        break
-
-    #detect_contours(frame)
-
-    if(frame_num == 1):
-        detect_areaCanny(frame)
 
 
 
