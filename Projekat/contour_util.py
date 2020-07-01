@@ -75,7 +75,7 @@ def detect_contoursBrownColor(frame):
         center, size, angle = cv2.minAreaRect(
             contour)  # pronadji pravougaonik minimalne povrsine koji ce obuhvatiti celu konturu
         width, height = size
-        if width > 10 and width < 35 and height > 10 and height < 35:
+        if width > 10 and width < 40 and height > 10 and height < 35:
             contours_people.append(contour)
 
     imgCopy = frame.copy()
