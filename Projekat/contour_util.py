@@ -65,6 +65,9 @@ def detect_contoursBrownColor(frame):
     # odvoji smedju pozadinu
     img_gray = image_gray(frame)
     bin_img = cv2.inRange(img_gray, 5, 20)
+
+    #bin_img = dilate(bin_img)
+    #bin_img = erode(bin_img)
     contours, hierarchy = cv2.findContours(bin_img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
     img = frame.copy()
@@ -124,8 +127,10 @@ def detect_areaCanny(img):
         print ((x1, y1), (x2, y2))
         cv2.line(imgCopy, (x1, y1), (x2, y2), (0, 255, 0), 2)
         final_line = line[0]
+        break
 
     #display_image(imgCopy)
+    #cv2.imwrite('canny.jpg', imgCopy)
     return final_line
 
 

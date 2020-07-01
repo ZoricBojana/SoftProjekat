@@ -6,6 +6,7 @@ class Object():
     def __init__(self, centroid):
         self.centroid = centroid
         self.counter = 1
+        self.appears = 1 # poslednje pojavljivanje
 
     def __str__(self):
         return self.centroid, ', ', self.counter
@@ -13,6 +14,7 @@ class Object():
     def update(self, centroid):
         self.centroid = centroid
         self.counter += 1
+        self.appears += 1
 
     def inc_counter(self):
         self.counter += 1
@@ -22,14 +24,31 @@ class ObjectTracker():
     def __init__(self):
         self.nextObjectID = 0
         self.objects = OrderedDict()
+        self.disappeared = OrderedDict()
+        self.max_dissapeared = 20
+        self.deregistered = OrderedDict()
 
     def register(self, cenroid):
         self.objects[self.nextObjectID] = Object(cenroid)
+        self.disappeared[self.nextObjectID] = 0
         self.nextObjectID += 1
+
+    def deregister(self, objectID):
+        self.deregistered[objectID] = self.objects[objectID]
+        del self.objects[objectID]
+        del self.disappeared[objectID]
+
 
     def update(self, centroids):
         if(len(centroids) == 0):
             #ako je lista novih cetroida prazna, vrati dosadasnje objekte
+            for objectID in list(self.disappeared.keys()):
+                self.disappeared[objectID] += 1
+                # if we have reached a maximum number of consecutive
+                # frames where a given object has been marked as
+                # missing, deregister it
+                if self.disappeared[objectID] > self.maxDisappeared:
+                    self.deregister(objectID)
             return self.objects
         if len(self.objects)==0:
             # ako trenutno ne pratimo ni jedan objekat, registruj sve ulazne centroide
@@ -83,6 +102,7 @@ class ObjectTracker():
                 objectID = objectIDs[row]
                 #self.objects[objectID] = centroids[col]
                 self.objects[objectID].update(centroids[col])
+                self.disappeared[objectID] = 0
                 # indicate that we have examined each of the row and
                 # column indexes, respectively
                 usedRows.add(row)
@@ -101,6 +121,10 @@ class ObjectTracker():
                     # grab the object ID for the corresponding row
                     # index and increment the disappeared counter
                     objectID = objectIDs[row]
+                    self.disappeared[objectID] += 1
+
+                    if self.disappeared[objectID] > self.max_dissapeared:
+                        self.deregister(objectID)
                     # check to see if the number of consecutive
                     # frames the object has been marked "disappeared"
                     # for warrants deregistering the object

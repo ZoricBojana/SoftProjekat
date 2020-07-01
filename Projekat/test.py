@@ -14,7 +14,7 @@ def get_video_title(order_number):
     return "video/video" + str(order_number) + ".mp4"
 
 def cross_line(x,y):
-    if x > 180 and x < 480 and y < 250 and y > 200:
+    if x > 180 and x < 480 and y < 250 and y > 220:
         return True
     return False
 
@@ -24,10 +24,35 @@ def print_MAE(my_results):
     # print(res)
     print('MAE: ', mean_absolute_error(res, my_results))
 
+def get_line():
+    cap = cv2.VideoCapture(get_video_title(5))
+    cap.set(1, 0)
+    ret_val, frame = cap.read()
+    line = detect_areaCanny(frame)
+    return line
+
+def k_and_n(line):
+    k = (line[1] - line[3])/(line[0] - line[2])
+    n = line[1] - k* line[0]
+
+    return k, n
 
 if __name__ == '__main__':
 
     my_results = []
+
+    line = get_line()
+    # 188, 110, 470, 90
+    k, n = k_and_n(line)
+
+    x1, y1, x2, y2 = line
+
+    t = 150
+
+    y1 += 100
+    y2 += 100
+
+    n = n + 50
 
     for i in range(1,11):
         # ucitavanje videa
@@ -70,16 +95,29 @@ if __name__ == '__main__':
                     with_contoures = cv2.circle(with_contoures, (center[0], center[1]), radius=2, color=(0, 0, 255), thickness=2)
             #print(centers)
             tracker.update(tuple(centers))
-            cv2.line(with_contoures, (180, 225), (480, 225), (0, 255, 0), 2)
+            cv2.line(with_contoures, (x1, y1), (x2, y2), (0, 255, 0), 2)
             video.write(with_contoures)
 
             ret_val, frame = cap.read()
 
 
             curr = frame
-        my_results.append(len(tracker.objects))
 
-        print(counter, ' vs ' , len(tracker.objects))
+
+        brojac = 0
+
+        for el in tracker.objects.values():
+            if(el.counter > 25):
+                brojac += 1
+
+        for el in tracker.deregistered.values():
+            if(el.counter > 25):
+                brojac += 1
+
+        #my_results.append(len(tracker.objects) + 2)
+        my_results.append(brojac)
+
+        print(counter, ' vs ' , brojac)
         #print(counter)
 
         cv2.destroyAllWindows()
