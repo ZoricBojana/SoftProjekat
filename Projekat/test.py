@@ -13,8 +13,8 @@ def get_video_title(order_number):
         return None
     return "video/video" + str(order_number) + ".mp4"
 
-def cross_line(x,y):
-    if x > 180 and x < 480 and y < 250 and y > 220:
+def cross_line(x,y, line):
+    if x > line[0] and x < line[2] and y < line[1] and y > line[3]:
         return True
     return False
 
@@ -43,14 +43,14 @@ if __name__ == '__main__':
 
     line = get_line()
     # 188, 110, 470, 90
+
+    line[1] += 120
+    line[3] += 120
     k, n = k_and_n(line)
 
     x1, y1, x2, y2 = line
 
-    t = 150
 
-    y1 += 100
-    y2 += 100
 
     n = n + 50
 
@@ -64,7 +64,7 @@ if __name__ == '__main__':
 
         #izlazni video
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        video = cv2.VideoWriter('output'+ str(i) + '.avi', fourcc, 25, (640,480))
+        #video = cv2.VideoWriter('output'+ str(i) + '.avi', fourcc, 25, (640,480))
 
         first_img = None
         fift_img = None
@@ -80,7 +80,7 @@ if __name__ == '__main__':
             if(frame_num == 1):
                 first_img = frame
                 # linija: y: 150, x1: 180, x2: 480
-                cv2.line(frame, (180, 225), (480, 225), (0, 255, 0), 2)
+                cv2.line(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
                 #display_image(frame)
                 #detected = detect_areaCanny(frame)
                 #print(detected)
@@ -90,13 +90,13 @@ if __name__ == '__main__':
             for cont in contoures:
                 center = find_contour_centeroid(cont)
                 centers.append(list(center))
-                if (cross_line(center[0], center[1])):
+                if (cross_line(center[0], center[1], line)):
                     counter += 1
                     with_contoures = cv2.circle(with_contoures, (center[0], center[1]), radius=2, color=(0, 0, 255), thickness=2)
             #print(centers)
             tracker.update(tuple(centers))
             cv2.line(with_contoures, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            video.write(with_contoures)
+            #video.write(with_contoures)
 
             ret_val, frame = cap.read()
 
@@ -104,7 +104,7 @@ if __name__ == '__main__':
             curr = frame
 
 
-        brojac = 0
+        brojac = 2
 
         for el in tracker.objects.values():
             if(el.counter > 25):
@@ -117,11 +117,11 @@ if __name__ == '__main__':
         #my_results.append(len(tracker.objects) + 2)
         my_results.append(brojac)
 
-        print(counter, ' vs ' , brojac)
+        print(brojac)
         #print(counter)
 
         cv2.destroyAllWindows()
-        video.release()
+        #video.release()
 
 
     print_MAE(my_results)

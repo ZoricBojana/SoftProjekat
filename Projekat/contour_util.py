@@ -31,36 +31,6 @@ def contours_difference(prev_img, current_img):
     #display_image(imgCopy)
     return imgCopy
 
-def detect_contours(img):
-    #detekcija ljudi na slici
-
-    img_gray = image_gray(img)
-
-    # prema histogramu, plato se nalazi negde na 18
-    #ret, image_bin = cv2.threshold(img_gray, 17, 255, cv2.THRESH_BINARY_INV) # ret je vrednost praga, image_bin je binarna slika
-    image_bin = cv2.adaptiveThreshold(img_gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 17, 5)
-    #image_bin = image_util.dilate(image_bin)
-    #image_bin = image_util.erode(image_bin)
-    #display_image(image_bin)
-
-    image_bin = dilate(image_bin)
-    image_bin = erode(image_bin)
-
-    contours, hierarchy = cv2.findContours(image_bin, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-
-    contours_people = []
-    for contour in contours:
-        center, size, angle = cv2.minAreaRect(
-            contour)  # pronadji pravougaonik minimalne povrsine koji ce obuhvatiti celu konturu
-        width, height = size
-        if width > 10 and width < 50 and height > 10 and height <50:
-            contours_people.append(contour)
-
-    imgCopy = img.copy()
-    cv2.drawContours(imgCopy, contours_people, -1, (255, 0, 0), 1)
-
-    return imgCopy
-
 def detect_contoursBrownColor(frame):
     # odvoji smedju pozadinu
     img_gray = image_gray(frame)
@@ -78,7 +48,7 @@ def detect_contoursBrownColor(frame):
         center, size, angle = cv2.minAreaRect(
             contour)  # pronadji pravougaonik minimalne povrsine koji ce obuhvatiti celu konturu
         width, height = size
-        if width > 10 and width < 40 and height > 10 and height < 35:
+        if width > 10 and width < 35 and height > 10 and height < 40:
             contours_people.append(contour)
 
     imgCopy = frame.copy()
